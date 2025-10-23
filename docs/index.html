@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Numlang Demo</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <h1>Numlang Interactive Demo</h1>
+
+    <div class="demo-container">
+      <div class="input-group">
+        <label for="number-input">Enter a number:</label>
+        <input type="text" id="number-input" placeholder="e.g. 12345.67" />
+      </div>
+			
+			<label for="options">Select options:</label>
+			<select name="options" id="options" multiple>
+			  <option value="use-commas">Use commas</option>
+			  <option value="use-and">Use 'and'</option>
+			  <option value="append-only">Append 'only'</option>
+			  <option value="uppercase">UPPERCASE</option>
+				<option value="capitalize" selected>Capitalize</option>
+			</select>
+
+      <div class="output-container">
+        <div class="output-row">
+          <span class="output-label">Words:</span>
+          <span id="words-output">-</span>
+        </div>
+        <div class="output-row">
+          <span class="output-label">Ordinal:</span>
+          <span id="ordinal-output">-</span>
+        </div>
+        <div class="output-row">
+          <span class="output-label">Ordinal Words:</span>
+          <span id="ordinal-words-output">-</span>
+        </div>
+      </div>
+    </div>
+
+    <h2>Code Example</h2>
+    <div id="code-example" class="demo-container">
+      <pre><code>import numlang from 'numlang';
+
+// Options
+const options = {
+  useCommas: false,
+  useAnd: false,
+  appendOnly: false,
+  uppercase: false,
+  capitalize: false
+};
+
+// Convert to words
+const words = numlang.toWords(12345, options);
+// "twelve thousand three hundred forty-five"
+
+// Convert to ordinal
+const ordinal = numlang.toOrdinal(12345);
+// "12345th"
+
+// Convert to ordinal words
+const ordinalWords = numlang.toWordsOrdinal(12345, options);
+// "twelve thousand three hundred forty-fifth"</code></pre>
+    </div>
+
+    <h2>Installation</h2>
+    <div class="demo-container">
+      <p>You can install numlang via npm:</p>
+      <pre><code>npm install numlang</code></pre>
+      <p>Or yarn:</p>
+      <pre><code>yarn add numlang</code></pre>
+    </div>
+
+    <h2>Usage</h2>
+    <div class="demo-container">
+      <p>Import the library:</p>
+      <pre><code>// ES Modules
+import numlang from 'numlang';
+// or specific functions
+import { toWords, toOrdinal, toWordsOrdinal } from 'numlang';
+
+// CommonJS
+const numlang = require('numlang');</code></pre>
+    </div>
+
+    <footer>
+      <p>
+        Numlang is an open-source library for converting numbers to words and
+        ordinals. View the
+        <a href="https://github.com/YOUR_USERNAME/numlang" target="_blank"
+          >GitHub repository</a
+        >.
+      </p>
+    </footer>
+
+    <script src="numlang.js"></script>
+    <script src="scripts.js"></script>
+  </body>
+</html>
