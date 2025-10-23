@@ -42,14 +42,31 @@ function stringIncludes(str: string, substr: string): boolean {
   return str.indexOf(substr) !== -1;
 }
 
+function isFloat(n: number | string): boolean {
+  if (typeof n === "number") return n % 1 !== 0;
+  if (typeof n === "string")
+    return n.includes(".") && !Number.isNaN(parseFloat(n));
+  return false;
+}
+
 export function toOrdinal(number: number | string): string {
   let num: number;
   if (typeof number === "string") {
+    if (isFloat(number)) {
+      throw new Error(
+        "Ordinal forms for floats are not standard in English. Please provide an integer.",
+      );
+    }
     num = parseInt(number, 10);
     if (isNaN(num)) throw new Error("Invalid number string provided");
   } else if (typeof number === "number") {
     if (!isFinite(number) || isNaN(number))
       throw new Error("Invalid number provided");
+    if (isFloat(number)) {
+      throw new Error(
+        "Ordinal forms for floats are not standard in English. Please provide an integer.",
+      );
+    }
     num = number;
   } else {
     throw new Error(
@@ -70,11 +87,21 @@ export function toWordsOrdinal(
   const mergedOptions = { ...defaultOptions, ...options };
   let num: number;
   if (typeof number === "string") {
+    if (isFloat(number)) {
+      throw new Error(
+        "Ordinal word forms for floats are not standard in English. Please provide an integer.",
+      );
+    }
     num = parseInt(number, 10);
     if (isNaN(num)) throw new Error("Invalid number string provided");
   } else if (typeof number === "number") {
     if (!isFinite(number) || isNaN(number))
       throw new Error("Invalid number provided");
+    if (isFloat(number)) {
+      throw new Error(
+        "Ordinal word forms for floats are not standard in English. Please provide an integer.",
+      );
+    }
     num = number;
   } else {
     throw new Error(
