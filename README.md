@@ -52,7 +52,7 @@ If the package is private, you’ll also need a GitHub personal access token wit
 ### Basic Usage
 
 ```javascript
-import { toWords, toOrdinal, toWordsOrdinal } from 'numlang';
+import { toWords, toOrdinal, toWordsOrdinal } from '@parchment/numlang';
 
 // Convert numbers to words (supports floats)
 toWords(0);                // "zero"
