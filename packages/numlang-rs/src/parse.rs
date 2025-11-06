@@ -1,6 +1,6 @@
-pub fn parse_words(s: &str) -> Result<f64, String> {
-    use std::collections::HashMap;
+use std::collections::HashMap;
 
+pub fn parse_words(s: &str) -> Result<f64, String> {
     let ones = [
         ("zero", 0),
         ("one", 1),
@@ -40,10 +40,37 @@ pub fn parse_words(s: &str) -> Result<f64, String> {
         ("billion", 1_000_000_000),
         ("trillion", 1_000_000_000_000),
     ];
+    let fractions = [
+        ("half", 2.0),
+        ("halves", 2.0),
+        ("third", 3.0),
+        ("thirds", 3.0),
+        ("quarter", 4.0),
+        ("quarters", 4.0),
+        ("fourth", 4.0),
+        ("fourths", 4.0),
+        ("fifth", 5.0),
+        ("fifths", 5.0),
+        ("sixth", 6.0),
+        ("sixths", 6.0),
+        ("seventh", 7.0),
+        ("sevenths", 7.0),
+        ("eighth", 8.0),
+        ("eighths", 8.0),
+        ("ninth", 9.0),
+        ("ninths", 9.0),
+        ("tenth", 10.0),
+        ("tenths", 10.0),
+    ];
 
     let mut word_map = HashMap::new();
     for &(w, v) in ones.iter().chain(tens.iter()).chain(scales.iter()) {
         word_map.insert(w, v);
+    }
+
+    let mut fraction_map = HashMap::new();
+    for &(w, denom) in fractions.iter() {
+        fraction_map.insert(w, denom);
     }
 
     let s_clean = s.replace("-", " ");
@@ -55,15 +82,16 @@ pub fn parse_words(s: &str) -> Result<f64, String> {
     let mut i = 0;
     let len = tokens.len();
 
-    // Find "point" if present
     let mut decimal_str = String::new();
+    let mut fraction_value = 0.0;
+    let mut found_fraction = false;
+
     while i < len {
         let token = tokens[i];
         if token == "negative" {
             negative = true;
         } else if token == "point" {
             i += 1;
-            // Parse each word after "point" as a digit
             while i < len {
                 if let Some(&v) = word_map.get(tokens[i]) {
                     if v >= 0 && v <= 9 {
@@ -76,6 +104,45 @@ pub fn parse_words(s: &str) -> Result<f64, String> {
                 }
                 i += 1;
             }
+            break;
+        } else if token == "and" {
+            // Check for mixed number: integer part before "and", fraction after
+            i += 1;
+            // Accept "a" as 1 (e.g., "one and a half")
+            let mut numerator = 1;
+            if i < len && tokens[i] == "a" {
+                numerator = 1;
+                i += 1;
+            } else if i < len {
+                if let Some(&v) = word_map.get(tokens[i]) {
+                    numerator = v;
+                    i += 1;
+                }
+            }
+            // Fraction word
+            if i < len {
+                let frac_token = tokens[i];
+                if let Some(&denom) = fraction_map.get(frac_token) {
+                    fraction_value = numerator as f64 / denom;
+                    found_fraction = true;
+                } else {
+                    return Err(format!("Unknown fraction: {}", frac_token));
+                }
+            }
+            // Plural fractions ("three quarters")
+            else if i < len {
+                if let Some(&denom) = fraction_map.get(tokens[i]) {
+                    fraction_value = numerator as f64 / denom;
+                    found_fraction = true;
+                }
+            }
+            break;
+        } else if let Some(&denom) = fraction_map.get(token) {
+            // "one half", "three quarters", etc.
+            let numerator = if current > 0 { current } else { 1 };
+            fraction_value = numerator as f64 / denom;
+            found_fraction = true;
+            current = 0;
             break;
         } else if let Some(&v) = word_map.get(token) {
             if v < 100 {
@@ -90,7 +157,19 @@ pub fn parse_words(s: &str) -> Result<f64, String> {
                     current = 0;
                 }
             }
+        } else if token == "a" {
+            // Accept "a" as 1 for fractions
+            current += 1;
         } else {
+            // Try plural fractions ("three quarters")
+            if let Some(&denom) = fraction_map.get(token) {
+                if current > 0 {
+                    fraction_value = current as f64 / denom;
+                    found_fraction = true;
+                    current = 0;
+                    break;
+                }
+            }
             return Err(format!("Unknown token: {}", token));
         }
         i += 1;
@@ -100,6 +179,9 @@ pub fn parse_words(s: &str) -> Result<f64, String> {
     if !decimal_str.is_empty() {
         let decimal_val: f64 = format!("0.{}", decimal_str).parse().unwrap_or(0.0);
         value += decimal_val;
+    }
+    if found_fraction {
+        value += fraction_value;
     }
     if negative {
         value = -value;

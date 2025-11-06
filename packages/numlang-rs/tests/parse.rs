@@ -42,6 +42,16 @@ fn test_floats() {
 }
 
 #[test]
+fn test_fractions() {
+    assert!((parse_words("half").unwrap() - 0.5).abs() < 1e-9);
+    assert!((parse_words("one half").unwrap() - 0.5).abs() < 1e-9);
+    assert!((parse_words("quarter").unwrap() - 0.25).abs() < 1e-9);
+    assert!((parse_words("three quarters").unwrap() - 0.75).abs() < 1e-9);
+    assert!((parse_words("one and a half").unwrap() - 1.5).abs() < 1e-9);
+    assert!((parse_words("two and three quarters").unwrap() - 2.75).abs() < 1e-9);
+}
+
+#[test]
 fn test_errors() {
     assert!(parse_words("foo").is_err());
     assert!(parse_words("one foo").is_err());
