@@ -1,6 +1,6 @@
-use std::collections::HashMap;
+pub fn parse_words(s: &str) -> Result<f64, String> {
+    use std::collections::HashMap;
 
-pub fn parse_words(s: &str) -> Result<i64, String> {
     let ones = [
         ("zero", 0),
         ("one", 1),
@@ -46,16 +46,37 @@ pub fn parse_words(s: &str) -> Result<i64, String> {
         word_map.insert(w, v);
     }
 
-    let mut result = 0i64;
-    let mut current = 0i64;
-    let mut negative = false;
-
     let s_clean = s.replace("-", " ");
     let tokens: Vec<&str> = s_clean.split_whitespace().collect();
 
-    for token in tokens {
+    let mut result = 0i64;
+    let mut current = 0i64;
+    let mut negative = false;
+    let mut i = 0;
+    let len = tokens.len();
+
+    // Find "point" if present
+    let mut decimal_str = String::new();
+    while i < len {
+        let token = tokens[i];
         if token == "negative" {
             negative = true;
+        } else if token == "point" {
+            i += 1;
+            // Parse each word after "point" as a digit
+            while i < len {
+                if let Some(&v) = word_map.get(tokens[i]) {
+                    if v >= 0 && v <= 9 {
+                        decimal_str.push_str(&v.to_string());
+                    } else {
+                        return Err(format!("Invalid decimal digit: {}", tokens[i]));
+                    }
+                } else {
+                    return Err(format!("Unknown token: {}", tokens[i]));
+                }
+                i += 1;
+            }
+            break;
         } else if let Some(&v) = word_map.get(token) {
             if v < 100 {
                 current += v;
@@ -72,10 +93,16 @@ pub fn parse_words(s: &str) -> Result<i64, String> {
         } else {
             return Err(format!("Unknown token: {}", token));
         }
+        i += 1;
     }
     result += current;
-    if negative {
-        result = -result;
+    let mut value = result as f64;
+    if !decimal_str.is_empty() {
+        let decimal_val: f64 = format!("0.{}", decimal_str).parse().unwrap_or(0.0);
+        value += decimal_val;
     }
-    Ok(result)
+    if negative {
+        value = -value;
+    }
+    Ok(value)
 }

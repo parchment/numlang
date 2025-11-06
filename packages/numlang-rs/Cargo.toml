@@ -1,10 +1,17 @@
 [package]
 name = "numlang"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 authors = ["victor <hello@vparchment.com>"]
 description = "Convert numbers to words and ordinals (Rust port of numlang-js)"
 license = "MIT"
 repository = "https://github.com/parchment/numlang"
+
+exclude = [
+    "target/*",
+    "tests/*",
+    ".env",
+    ".cargo/",
+]
 
 [dependencies]
