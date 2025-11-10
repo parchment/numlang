@@ -52,6 +52,15 @@ fn test_fractions() {
 }
 
 #[test]
+fn test_frequency_adverbs() {
+    assert_eq!(parse_words("once").unwrap(), 1.0);
+    assert_eq!(parse_words("twice").unwrap(), 2.0);
+    assert_eq!(parse_words("thrice").unwrap(), 3.0);
+    assert_eq!(parse_words("Twice daily").unwrap(), 2.0);
+    assert_eq!(parse_words("ONCE PER WEEK").unwrap(), 1.0);
+}
+
+#[test]
 fn test_errors() {
     assert!(parse_words("foo").is_err());
     assert!(parse_words("one foo").is_err());
