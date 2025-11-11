@@ -1,6 +1,12 @@
+use crate::string::from_string;
 use std::collections::HashMap;
 
 pub fn from_words(s: &str) -> Result<f64, String> {
+    // Try to parse as a number string first
+    if let Ok(num) = from_string(s) {
+        return Ok(num);
+    }
+
     let freq_adverbs = [("once", 1.0), ("twice", 2.0), ("thrice", 3.0)];
 
     let s_lower = s.to_lowercase();

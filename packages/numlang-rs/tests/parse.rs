@@ -65,3 +65,11 @@ fn test_errors() {
     assert!(from_words("foo").is_err());
     assert!(from_words("one foo").is_err());
 }
+
+#[test]
+fn test_number_strings() {
+    assert_eq!(from_words("2").unwrap(), 2.0);
+    assert_eq!(from_words("12.34").unwrap(), 12.34);
+    assert_eq!(from_words("-7").unwrap(), -7.0);
+    assert_eq!(from_words("0").unwrap(), 0.0);
+}

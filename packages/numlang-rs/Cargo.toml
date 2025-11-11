@@ -1,6 +1,6 @@
 [package]
 name = "numlang"
-version = "0.2.4"
+version = "0.3.0"
 edition = "2021"
 authors = ["victor <hello@vparchment.com>"]
 description = "Convert numbers to words and ordinals (Rust port of numlang-js)"
