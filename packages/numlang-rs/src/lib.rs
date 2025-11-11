@@ -7,4 +7,4 @@ pub mod parse;
 
 pub use cardinal::to_words;
 pub use ordinal::{to_ordinal, to_words_ordinal};
-pub use parse::parse_words;
+pub use parse::from_words;

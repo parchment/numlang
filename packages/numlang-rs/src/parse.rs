@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-pub fn parse_words(s: &str) -> Result<f64, String> {
+pub fn from_words(s: &str) -> Result<f64, String> {
     let freq_adverbs = [("once", 1.0), ("twice", 2.0), ("thrice", 3.0)];
 
     let s_lower = s.to_lowercase();

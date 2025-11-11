@@ -23,19 +23,19 @@ numlang = "0.2"
 ## Usage
 
 ```rust
-use numlang::{to_words, to_ordinal, to_words_ordinal, Options, parse_words};
+use numlang::{to_words, to_ordinal, to_words_ordinal, Options, from_words};
 
 // Convert numbers to words (supports floats)
 to_words(12.34, &Options::default());            // "twelve point three four"
 to_words(-0.56, &Options::default());            // "negative zero point five six"
 
 // Parse words to numbers (integers and floats)
-parse_words("forty-two").unwrap();                // 42.0
-parse_words("one thousand two hundred thirty-four").unwrap(); // 1234.0
-parse_words("negative seven").unwrap();           // -7.0
-parse_words("twelve point three four").unwrap();  // 12.34
-parse_words("negative zero point five six").unwrap(); // -0.56
-parse_words("one hundred twenty-three point four five six").unwrap(); // 123.456
+from_words("forty-two").unwrap();                // 42.0
+from_words("one thousand two hundred thirty-four").unwrap(); // 1234.0
+from_words("negative seven").unwrap();           // -7.0
+from_words("twelve point three four").unwrap();  // 12.34
+from_words("negative zero point five six").unwrap(); // -0.56
+from_words("one hundred twenty-three point four five six").unwrap(); // 123.456
 ```
 
 ### Formatting Options
@@ -53,7 +53,7 @@ to_words(123, &opts); // "one hundred and twenty-three"
 - `to_words(number, &Options)` — Converts a number (integer or float) to words.
 - `to_ordinal(number)` — Converts an integer to its ordinal form (e.g., 1st, 2nd).
 - `to_words_ordinal(number, &Options)` — Converts an integer to its ordinal word form.
-- `parse_words(s: &str)` — Parses number words to a `f64` (supports floats and integers).
+- `from_words(s: &str)` — Parses number words to a `f64` (supports floats and integers).
 
 ## Limitations
 
