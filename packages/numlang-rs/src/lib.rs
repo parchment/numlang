@@ -14,3 +14,6 @@ pub use parse::from_words;
 
 mod string;
 pub use string::from_string;
+
+pub mod unit;
+pub use unit::expand_unit;
