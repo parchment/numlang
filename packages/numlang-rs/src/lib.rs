@@ -17,3 +17,6 @@ pub use string::from_string;
 
 pub mod unit;
 pub use unit::expand_unit;
+
+pub mod plural;
+pub use plural::{to_plural, to_singular};
