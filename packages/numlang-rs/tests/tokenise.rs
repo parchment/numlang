@@ -57,3 +57,44 @@ fn test_tokenise_examples() {
         assert_eq!(actual, expected, "Failed for input: {}", input);
     }
 }
+
+#[test]
+fn test_tokenise_punctuation() {
+    let cases = vec![
+        (
+            "days.",
+            vec![
+                Token::Unknown("days".to_string()),
+                Token::Unknown(".".to_string()),
+            ],
+        ),
+        (
+            "\"foo!\"",
+            vec![
+                Token::Unknown("\"".to_string()),
+                Token::Unknown("foo".to_string()),
+                Token::Unknown("!\"".to_string()),
+            ],
+        ),
+        (
+            "42,",
+            vec![
+                Token::NumberString("42".to_string()),
+                Token::Unknown(",".to_string()),
+            ],
+        ),
+        (
+            "(seven)",
+            vec![
+                Token::Unknown("(".to_string()),
+                Token::NumberWord("seven".to_string()),
+                Token::Unknown(")".to_string()),
+            ],
+        ),
+    ];
+
+    for (input, expected) in cases {
+        let actual = tokenise(input);
+        assert_eq!(actual, expected, "Failed for input: {}", input);
+    }
+}
