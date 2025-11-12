@@ -1,6 +1,6 @@
 use crate::Options;
 
-const ONES: [&str; 20] = [
+pub const ONES: [&str; 20] = [
     "",
     "one",
     "two",
@@ -23,11 +23,11 @@ const ONES: [&str; 20] = [
     "nineteen",
 ];
 
-const TENS: [&str; 10] = [
+pub const TENS: [&str; 10] = [
     "", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety",
 ];
 
-const SCALES: [&str; 12] = [
+pub const SCALES: [&str; 12] = [
     "",
     "thousand",
     "million",
