@@ -61,6 +61,7 @@ fn unit_map() -> HashMap<&'static str, &'static str> {
     m.insert("min", "minute");
     m.insert("h", "hour");
     m.insert("hr", "hour");
+    m.insert("d", "day");
     m.insert("wk", "week");
     m.insert("mo", "month");
     m.insert("yr", "year");
