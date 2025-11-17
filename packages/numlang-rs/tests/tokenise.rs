@@ -53,7 +53,10 @@ fn test_tokenise_examples() {
     ];
 
     for (input, expected) in cases {
-        let actual = tokenise(input);
+        let actual = tokenise(input)
+            .into_iter()
+            .map(|span| span.token)
+            .collect::<Vec<_>>();
         assert_eq!(actual, expected, "Failed for input: {}", input);
     }
 }
@@ -94,7 +97,10 @@ fn test_tokenise_punctuation() {
     ];
 
     for (input, expected) in cases {
-        let actual = tokenise(input);
+        let actual = tokenise(input)
+            .into_iter()
+            .map(|span| span.token)
+            .collect::<Vec<_>>();
         assert_eq!(actual, expected, "Failed for input: {}", input);
     }
 }

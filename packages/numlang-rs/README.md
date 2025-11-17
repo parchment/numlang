@@ -11,6 +11,7 @@ A lightweight Rust library to convert numbers into their linguistic equivalents�
 - Configurable formatting options
 - Comprehensive test coverage
 - Parse words back to numbers (**integers and floats supported**)
+- **Tokenise strings into number/unit/unknown tokens, with character positions**
 
 ## Installation
 
@@ -23,7 +24,8 @@ numlang = "0.2"
 ## Usage
 
 ```rust
-use numlang::{to_words, to_ordinal, to_words_ordinal, Options, from_words};
+use numlang::{to_words, to_ordinal, to_words_ordinal, Options, from_words, tokenise};
+use numlang::tokenise::{TokenSpan, Token};
 
 // Convert numbers to words (supports floats)
 to_words(12.34, &Options::default());            // "twelve point three four"
@@ -36,6 +38,19 @@ from_words("negative seven").unwrap();           // -7.0
 from_words("twelve point three four").unwrap();  // 12.34
 from_words("negative zero point five six").unwrap(); // -0.56
 from_words("one hundred twenty-three point four five six").unwrap(); // 123.456
+
+// Tokenise a string into tokens with positions
+let tokens: Vec<TokenSpan> = tokenise("100g of sugar");
+for t in tokens {
+    // t.token: Token enum (NumberString, Unit, Unknown, etc.)
+    // t.start, t.end: character positions in the input string
+    println!("{:?} [{}..{}]", t.token, t.start, t.end);
+}
+// Output:
+// NumberString("100") [0..3]
+// Unit("g") [3..4]
+// Unknown("of") [5..7]
+// Unknown("sugar") [8..13]
 ```
 
 ### Formatting Options
@@ -54,6 +69,7 @@ to_words(123, &opts); // "one hundred and twenty-three"
 - `to_ordinal(number)` — Converts an integer to its ordinal form (e.g., 1st, 2nd).
 - `to_words_ordinal(number, &Options)` — Converts an integer to its ordinal word form.
 - `from_words(s: &str)` — Parses number words to a `f64` (supports floats and integers).
+- `tokenise(s: &str) -> Vec<TokenSpan>` — Splits a string into tokens, each with its type and character positions.
 
 ## Limitations
 

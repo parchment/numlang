@@ -10,9 +10,17 @@ pub enum Token {
     Unknown(String),
 }
 
+/// Token with its start and end character positions in the input.
+#[derive(Debug, PartialEq, Eq)]
+pub struct TokenSpan {
+    pub token: Token,
+    pub start: usize,
+    pub end: usize,
+}
+
 /// Splits leading and trailing ASCII punctuation from a token.
-/// E.g., "days." -> ["days", "."], "\"foo!\"" -> ["\"", "foo", "!\""]
-fn split_punct<'a>(token: &'a str) -> Vec<&'a str> {
+/// Returns a vector of (subtoken, offset-from-token-start, length).
+fn split_punct_with_offsets(token: &str, token_start: usize) -> Vec<(String, usize, usize)> {
     let mut tokens = Vec::new();
     let mut start = 0;
     let mut end = token.len();
@@ -32,22 +40,30 @@ fn split_punct<'a>(token: &'a str) -> Vec<&'a str> {
         }
     }
     if start > 0 {
-        tokens.push(&token[..start]);
+        tokens.push((token[..start].to_string(), token_start, start));
     }
     if start < end {
-        tokens.push(&token[start..end]);
+        tokens.push((
+            token[start..end].to_string(),
+            token_start + start,
+            end - start,
+        ));
     }
     if end < token.len() {
-        tokens.push(&token[end..]);
+        tokens.push((
+            token[end..].to_string(),
+            token_start + end,
+            token.len() - end,
+        ));
     }
     tokens
 }
 
-/// Tokenises an input string into tokens.
+/// Tokenises an input string into tokens with character positions.
 /// Preserves hyphenated number words as single tokens.
 /// Splits value+unit combos (e.g., "200g" -> ["200", "g"]).
 /// Separates leading/trailing punctuation as separate tokens.
-pub fn tokenise(input: &str) -> Vec<Token> {
+pub fn tokenise(input: &str) -> Vec<TokenSpan> {
     let mut tokens = Vec::new();
 
     // Build known number word set
@@ -62,49 +78,91 @@ pub fn tokenise(input: &str) -> Vec<Token> {
     number_words.insert("and");
     number_words.insert("hundred");
 
-    let input = input.trim().to_lowercase();
-    let raw_tokens: Vec<&str> = input.split_whitespace().collect();
+    let input = input.trim();
+    let input_lower = input.to_lowercase();
 
-    for raw in raw_tokens {
-        for part in split_punct(raw) {
-            if part.is_empty() {
+    // Map from input_lower indices to input indices for position tracking
+    // (since lowercasing may change byte offsets for non-ASCII, but for ASCII it's fine)
+    // We'll assume ASCII input for simplicity.
+
+    let mut idx = 0;
+    for raw in input_lower.split_whitespace() {
+        // Find raw token in original input for position tracking
+        // Use input.find, starting from idx
+        let orig_start = match input[idx..].find(raw) {
+            Some(offset) => idx + offset,
+            None => idx, // fallback
+        };
+        let orig_end = orig_start + raw.len();
+
+        for (sub, sub_start_offset, sub_len) in split_punct_with_offsets(raw, orig_start) {
+            let sub_start = sub_start_offset;
+            let sub_end = sub_start + sub_len;
+            if sub.is_empty() {
                 continue;
             }
 
             // Value+unit combos (e.g., "200g", "3.5kg")
-            if let Some(idx) = part.find(|c: char| c.is_alphabetic()) {
-                if idx > 0 && part[..idx].chars().all(|c| c.is_digit(10) || c == '.') {
-                    let (num, unit) = part.split_at(idx);
-                    tokens.push(Token::NumberString(num.to_string()));
-                    tokens.push(Token::Unit(unit.to_string()));
+            if let Some(i) = sub.find(|c: char| c.is_alphabetic()) {
+                if i > 0 && sub[..i].chars().all(|c| c.is_digit(10) || c == '.') {
+                    let num = &sub[..i];
+                    let unit = &sub[i..];
+                    tokens.push(TokenSpan {
+                        token: Token::NumberString(num.to_string()),
+                        start: sub_start,
+                        end: sub_start + num.len(),
+                    });
+                    tokens.push(TokenSpan {
+                        token: Token::Unit(unit.to_string()),
+                        start: sub_start + num.len(),
+                        end: sub_end,
+                    });
                     continue;
                 }
             }
 
             // Pure number string
-            if part.chars().all(|c| c.is_digit(10) || c == '.' || c == '-')
-                && part.chars().any(|c| c.is_digit(10))
+            if sub.chars().all(|c| c.is_digit(10) || c == '.' || c == '-')
+                && sub.chars().any(|c| c.is_digit(10))
             {
-                tokens.push(Token::NumberString(part.to_string()));
+                tokens.push(TokenSpan {
+                    token: Token::NumberString(sub.to_string()),
+                    start: sub_start,
+                    end: sub_end,
+                });
                 continue;
             }
 
             // Known number word (including hyphenated, e.g., "twenty-one")
-            if number_words.contains(part) || part.split('-').all(|sub| number_words.contains(sub))
+            if number_words.contains(sub.as_str())
+                || sub.split('-').all(|subw| number_words.contains(subw))
             {
-                tokens.push(Token::NumberWord(part.to_string()));
+                tokens.push(TokenSpan {
+                    token: Token::NumberWord(sub.to_string()),
+                    start: sub_start,
+                    end: sub_end,
+                });
                 continue;
             }
 
             // Punctuation as unknown
-            if part.chars().all(|c| c.is_ascii_punctuation()) {
-                tokens.push(Token::Unknown(part.to_string()));
+            if sub.chars().all(|c| c.is_ascii_punctuation()) {
+                tokens.push(TokenSpan {
+                    token: Token::Unknown(sub.to_string()),
+                    start: sub_start,
+                    end: sub_end,
+                });
                 continue;
             }
 
             // Unknown
-            tokens.push(Token::Unknown(part.to_string()));
+            tokens.push(TokenSpan {
+                token: Token::Unknown(sub.to_string()),
+                start: sub_start,
+                end: sub_end,
+            });
         }
+        idx = orig_end;
     }
     tokens
 }
