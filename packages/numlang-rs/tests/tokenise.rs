@@ -104,3 +104,53 @@ fn test_tokenise_punctuation() {
         assert_eq!(actual, expected, "Failed for input: {}", input);
     }
 }
+
+#[test]
+fn test_tokenise_positions() {
+    let input = "100g of sugar";
+    let expected = vec![
+        (Token::NumberString("100".to_string()), 0, 3),
+        (Token::Unit("g".to_string()), 3, 4),
+        (Token::Unknown("of".to_string()), 5, 7),
+        (Token::Unknown("sugar".to_string()), 8, 13),
+    ];
+    let actual = tokenise(input);
+    for (i, (token, start, end)) in expected.iter().enumerate() {
+        assert_eq!(&actual[i].token, token, "Token mismatch at index {}", i);
+        assert_eq!(actual[i].start, *start, "Start mismatch at index {}", i);
+        assert_eq!(actual[i].end, *end, "End mismatch at index {}", i);
+    }
+}
+
+#[test]
+fn test_tokenise_complex_positions() {
+    let input =
+        "Give 1 tablet every 12 hours for 7 days then give 2 tablet every 8 hour for 5 days";
+    let expected = vec![
+        (Token::Unknown("Give".to_string()), 0, 4),
+        (Token::NumberString("1".to_string()), 5, 6),
+        (Token::Unknown("tablet".to_string()), 7, 13),
+        (Token::Unknown("every".to_string()), 14, 19),
+        (Token::NumberString("12".to_string()), 20, 22),
+        (Token::Unknown("hours".to_string()), 23, 28),
+        (Token::Unknown("for".to_string()), 29, 32),
+        (Token::NumberString("7".to_string()), 33, 34),
+        (Token::Unknown("days".to_string()), 35, 39),
+        (Token::Unknown("then".to_string()), 40, 44),
+        (Token::Unknown("give".to_string()), 45, 49),
+        (Token::NumberString("2".to_string()), 50, 51),
+        (Token::Unknown("tablet".to_string()), 52, 58),
+        (Token::Unknown("every".to_string()), 59, 64),
+        (Token::NumberString("8".to_string()), 65, 66),
+        (Token::Unknown("hour".to_string()), 67, 71),
+        (Token::Unknown("for".to_string()), 72, 75),
+        (Token::NumberString("5".to_string()), 76, 77),
+        (Token::Unknown("days".to_string()), 78, 82),
+    ];
+    let actual = tokenise(input);
+    for (i, (token, start, end)) in expected.iter().enumerate() {
+        assert_eq!(&actual[i].token, token, "Token mismatch at index {}", i);
+        assert_eq!(actual[i].start, *start, "Start mismatch at index {}", i);
+        assert_eq!(actual[i].end, *end, "End mismatch at index {}", i);
+    }
+}

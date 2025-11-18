@@ -79,32 +79,37 @@ pub fn tokenise(input: &str) -> Vec<TokenSpan> {
     number_words.insert("hundred");
 
     let input = input.trim();
-    let input_lower = input.to_lowercase();
-
-    // Map from input_lower indices to input indices for position tracking
-    // (since lowercasing may change byte offsets for non-ASCII, but for ASCII it's fine)
-    // We'll assume ASCII input for simplicity.
-
     let mut idx = 0;
-    for raw in input_lower.split_whitespace() {
-        // Find raw token in original input for position tracking
-        // Use input.find, starting from idx
-        let orig_start = match input[idx..].find(raw) {
-            Some(offset) => idx + offset,
-            None => idx, // fallback
-        };
-        let orig_end = orig_start + raw.len();
+    let input_bytes = input.as_bytes();
+    let len = input.len();
 
-        for (sub, sub_start_offset, sub_len) in split_punct_with_offsets(raw, orig_start) {
+    while idx < len {
+        // Skip whitespace
+        while idx < len && input_bytes[idx].is_ascii_whitespace() {
+            idx += 1;
+        }
+        if idx >= len {
+            break;
+        }
+        // Find end of token
+        let start = idx;
+        let mut end = idx;
+        while end < len && !input_bytes[end].is_ascii_whitespace() {
+            end += 1;
+        }
+        let raw = &input[start..end];
+
+        for (sub, sub_start_offset, sub_len) in split_punct_with_offsets(raw, start) {
             let sub_start = sub_start_offset;
             let sub_end = sub_start + sub_len;
             if sub.is_empty() {
                 continue;
             }
+            let sub_lc = sub.to_lowercase();
 
             // Value+unit combos (e.g., "200g", "3.5kg")
-            if let Some(i) = sub.find(|c: char| c.is_alphabetic()) {
-                if i > 0 && sub[..i].chars().all(|c| c.is_digit(10) || c == '.') {
+            if let Some(i) = sub_lc.find(|c: char| c.is_alphabetic()) {
+                if i > 0 && sub_lc[..i].chars().all(|c| c.is_digit(10) || c == '.') {
                     let num = &sub[..i];
                     let unit = &sub[i..];
                     tokens.push(TokenSpan {
@@ -122,8 +127,10 @@ pub fn tokenise(input: &str) -> Vec<TokenSpan> {
             }
 
             // Pure number string
-            if sub.chars().all(|c| c.is_digit(10) || c == '.' || c == '-')
-                && sub.chars().any(|c| c.is_digit(10))
+            if sub_lc
+                .chars()
+                .all(|c| c.is_digit(10) || c == '.' || c == '-')
+                && sub_lc.chars().any(|c| c.is_digit(10))
             {
                 tokens.push(TokenSpan {
                     token: Token::NumberString(sub.to_string()),
@@ -134,8 +141,8 @@ pub fn tokenise(input: &str) -> Vec<TokenSpan> {
             }
 
             // Known number word (including hyphenated, e.g., "twenty-one")
-            if number_words.contains(sub.as_str())
-                || sub.split('-').all(|subw| number_words.contains(subw))
+            if number_words.contains(sub_lc.as_str())
+                || sub_lc.split('-').all(|subw| number_words.contains(subw))
             {
                 tokens.push(TokenSpan {
                     token: Token::NumberWord(sub.to_string()),
@@ -162,7 +169,7 @@ pub fn tokenise(input: &str) -> Vec<TokenSpan> {
                 end: sub_end,
             });
         }
-        idx = orig_end;
+        idx = end;
     }
     tokens
 }

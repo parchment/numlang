@@ -32,6 +32,10 @@ fn unit_map() -> HashMap<&'static str, &'static str> {
     m.insert("gtt", "drop");
     m.insert("spray", "spray");
     m.insert("puff", "puff");
+    m.insert("mg/kg", "milligram per kilogram");
+    m.insert("ml/kg", "milliliter per kilogram");
+    m.insert("mcg/kg", "microgram per kilogram");
+    m.insert("ug/kg", "microgram per kilogram");
 
     // Mass/weight
     m.insert("mg", "milligram");
@@ -75,6 +79,11 @@ fn unit_map() -> HashMap<&'static str, &'static str> {
     m.insert("patch", "patch");
     m.insert("chew", "chew");
     m.insert("dose", "dose");
+    m.insert("sachet", "sachet");
+    m.insert("kg dose", "kilogram dose");
+    m.insert("pump", "pump");
+    m.insert("app", "application");
+    m.insert("pipette", "pipette");
 
     m
 }
