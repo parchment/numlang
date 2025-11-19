@@ -70,3 +70,12 @@ fn test_formatting_options() {
         "one thousand two hundred thirty-four only"
     );
 }
+
+#[test]
+fn test_leading_zero_in_decimal() {
+    use numlang::{to_words, Options};
+    assert_eq!(
+        to_words(0.105, &Options::default()),
+        "zero point one zero five"
+    );
+}

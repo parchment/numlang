@@ -82,8 +82,7 @@ fn convert_decimal_part(decimal: &str) -> String {
     decimal
         .chars()
         .filter_map(|c| c.to_digit(10))
-        .map(|d| ONES[d as usize])
-        .filter(|s| !s.is_empty())
+        .map(|d| if d == 0 { "zero" } else { ONES[d as usize] })
         .collect::<Vec<_>>()
         .join(" ")
 }

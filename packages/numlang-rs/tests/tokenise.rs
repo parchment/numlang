@@ -129,7 +129,7 @@ fn test_tokenise_complex_positions() {
     let expected = vec![
         (Token::Unknown("Give".to_string()), 0, 4),
         (Token::NumberString("1".to_string()), 5, 6),
-        (Token::Unknown("tablet".to_string()), 7, 13),
+        (Token::Unit("tablet".to_string()), 7, 13),
         (Token::Unknown("every".to_string()), 14, 19),
         (Token::NumberString("12".to_string()), 20, 22),
         (Token::Unknown("hours".to_string()), 23, 28),
@@ -139,7 +139,7 @@ fn test_tokenise_complex_positions() {
         (Token::Unknown("then".to_string()), 40, 44),
         (Token::Unknown("give".to_string()), 45, 49),
         (Token::NumberString("2".to_string()), 50, 51),
-        (Token::Unknown("tablet".to_string()), 52, 58),
+        (Token::Unit("tablet".to_string()), 52, 58),
         (Token::Unknown("every".to_string()), 59, 64),
         (Token::NumberString("8".to_string()), 65, 66),
         (Token::Unknown("hour".to_string()), 67, 71),
@@ -153,4 +153,48 @@ fn test_tokenise_complex_positions() {
         assert_eq!(actual[i].start, *start, "Start mismatch at index {}", i);
         assert_eq!(actual[i].end, *end, "End mismatch at index {}", i);
     }
+}
+
+#[test]
+fn test_tokenise_compound_unit_attached() {
+    let input = "20mg/kg";
+    let tokens = tokenise(input);
+    assert_eq!(tokens.len(), 2);
+    assert_eq!(tokens[0].token, Token::NumberString("20".to_string()));
+    assert_eq!(tokens[1].token, Token::Unit("mg/kg".to_string()));
+}
+
+#[test]
+fn test_tokenise_compound_unit_separated() {
+    let input = "20 mg/kg";
+    let tokens = tokenise(input);
+    assert_eq!(tokens.len(), 2);
+    assert_eq!(tokens[0].token, Token::NumberString("20".to_string()));
+    assert_eq!(tokens[1].token, Token::Unit("mg/kg".to_string()));
+}
+
+#[test]
+fn test_tokenise_simple_attached_unit() {
+    let input = "5ml";
+    let tokens = tokenise(input);
+    assert_eq!(tokens.len(), 2);
+    assert_eq!(tokens[0].token, Token::NumberString("5".to_string()));
+    assert_eq!(tokens[1].token, Token::Unit("ml".to_string()));
+}
+
+#[test]
+fn test_tokenise_simple_separated_unit() {
+    let input = "5 ml";
+    let tokens = tokenise(input);
+    assert_eq!(tokens.len(), 2);
+    assert_eq!(tokens[0].token, Token::NumberString("5".to_string()));
+    assert_eq!(tokens[1].token, Token::Unit("ml".to_string()));
+}
+
+#[test]
+fn test_tokenise_unknown_attached() {
+    let input = "20xyz";
+    let tokens = tokenise(input);
+    assert_eq!(tokens.len(), 1);
+    assert_eq!(tokens[0].token, Token::Unknown("20xyz".to_string()));
 }

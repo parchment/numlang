@@ -1,4 +1,5 @@
 use crate::cardinal::{ONES, SCALES, TENS};
+use crate::unit;
 use std::collections::HashSet;
 
 /// Represents a token extracted from the input string.
@@ -61,7 +62,7 @@ fn split_punct_with_offsets(token: &str, token_start: usize) -> Vec<(String, usi
 
 /// Tokenises an input string into tokens with character positions.
 /// Preserves hyphenated number words as single tokens.
-/// Splits value+unit combos (e.g., "200g" -> ["200", "g"]).
+/// Splits value+unit combos (e.g., "200g" -> ["200", "g"], "20mg/kg" -> ["20", "mg/kg"]).
 /// Separates leading/trailing punctuation as separate tokens.
 pub fn tokenise(input: &str) -> Vec<TokenSpan> {
     let mut tokens = Vec::new();
@@ -77,6 +78,12 @@ pub fn tokenise(input: &str) -> Vec<TokenSpan> {
     number_words.insert("negative");
     number_words.insert("and");
     number_words.insert("hundred");
+
+    // Build known unit set (abbreviations and compound units)
+    let mut unit_set = HashSet::new();
+    for (abbr, _) in unit::unit_map() {
+        unit_set.insert(abbr.to_lowercase());
+    }
 
     let input = input.trim();
     let mut idx = 0;
@@ -107,18 +114,28 @@ pub fn tokenise(input: &str) -> Vec<TokenSpan> {
             }
             let sub_lc = sub.to_lowercase();
 
-            // Value+unit combos (e.g., "200g", "3.5kg")
-            if let Some(i) = sub_lc.find(|c: char| c.is_alphabetic()) {
-                if i > 0 && sub_lc[..i].chars().all(|c| c.is_digit(10) || c == '.') {
-                    let num = &sub[..i];
-                    let unit = &sub[i..];
+            // Value+unit combos (e.g., "200g", "3.5kg", "20mg/kg")
+            // Find first non-number character
+            let mut i = 0;
+            for (idx_char, c) in sub_lc.char_indices() {
+                if !(c.is_digit(10) || c == '.' || c == '-') {
+                    i = idx_char;
+                    break;
+                }
+            }
+            // If i > 0 and the rest matches a known unit, split
+            if i > 0 && i < sub_lc.len() {
+                let num = &sub[..i];
+                let unit_candidate = &sub[i..];
+                let unit_candidate_lc = unit_candidate.to_lowercase();
+                if unit_set.contains(unit_candidate_lc.as_str()) {
                     tokens.push(TokenSpan {
                         token: Token::NumberString(num.to_string()),
                         start: sub_start,
                         end: sub_start + num.len(),
                     });
                     tokens.push(TokenSpan {
-                        token: Token::Unit(unit.to_string()),
+                        token: Token::Unit(unit_candidate.to_string()),
                         start: sub_start + num.len(),
                         end: sub_end,
                     });
@@ -146,6 +163,16 @@ pub fn tokenise(input: &str) -> Vec<TokenSpan> {
             {
                 tokens.push(TokenSpan {
                     token: Token::NumberWord(sub.to_string()),
+                    start: sub_start,
+                    end: sub_end,
+                });
+                continue;
+            }
+
+            // Known unit (standalone)
+            if unit_set.contains(sub_lc.as_str()) {
+                tokens.push(TokenSpan {
+                    token: Token::Unit(sub.to_string()),
                     start: sub_start,
                     end: sub_end,
                 });

@@ -38,7 +38,7 @@ pub fn unit_type(unit: &str) -> Option<UnitType> {
     rev_map.get(key.as_str()).copied()
 }
 
-fn unit_map() -> HashMap<&'static str, (&'static str, UnitType)> {
+pub fn unit_map() -> HashMap<&'static str, (&'static str, UnitType)> {
     let mut m = HashMap::new();
     // Volume
     m.insert("ml", ("milliliter", UnitType::Volume));
