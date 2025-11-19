@@ -71,8 +71,8 @@ fn unit_map() -> HashMap<&'static str, &'static str> {
     m.insert("yr", "year");
 
     // Dosage forms
-    m.insert("tab", "tablet");
-    m.insert("cap", "capsule");
+    m.insert("tablet", "tablet");
+    m.insert("capsule", "capsule");
     m.insert("supp", "suppository");
     m.insert("amp", "ampule");
     m.insert("vial", "vial");
