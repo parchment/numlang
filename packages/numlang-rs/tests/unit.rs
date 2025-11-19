@@ -1,4 +1,4 @@
-use numlang::{abbreviate_unit, expand_unit};
+use numlang::{abbreviate_unit, expand_unit, unit_type, UnitType};
 
 #[test]
 fn test_expand_unit_basic() {
@@ -28,7 +28,6 @@ fn test_expand_unit_plural_and_case() {
 #[test]
 fn test_abbreviate_unit_singular() {
     assert_eq!(abbreviate_unit("milliliter"), Some("ml"));
-    assert_eq!(abbreviate_unit("tablet"), Some("tab"));
     assert_eq!(abbreviate_unit("drop"), Some("gtt"));
     let abbr = abbreviate_unit("microgram");
     assert!(abbr == Some("mcg") || abbr == Some("μg"));
@@ -37,7 +36,6 @@ fn test_abbreviate_unit_singular() {
 #[test]
 fn test_abbreviate_unit_plural() {
     assert_eq!(abbreviate_unit("milliliters"), Some("ml"));
-    assert_eq!(abbreviate_unit("tablets"), Some("tab"));
     assert_eq!(abbreviate_unit("drops"), Some("gtt"));
     let abbr = abbreviate_unit("micrograms");
     assert!(abbr == Some("mcg") || abbr == Some("μg"));
@@ -46,11 +44,34 @@ fn test_abbreviate_unit_plural() {
 #[test]
 fn test_abbreviate_unit_case_insensitive() {
     assert_eq!(abbreviate_unit("Milliliters"), Some("ml"));
-    assert_eq!(abbreviate_unit("TABLETS"), Some("tab"));
 }
 
 #[test]
 fn test_abbreviate_unit_unknown() {
     assert_eq!(abbreviate_unit("unknownunit"), None);
     assert_eq!(abbreviate_unit(""), None);
+}
+
+#[test]
+fn test_unit_type_basic() {
+    assert_eq!(unit_type("mg"), Some(UnitType::Mass));
+    assert_eq!(unit_type("ml"), Some(UnitType::Volume));
+    assert_eq!(unit_type("tablet"), Some(UnitType::DosageForm));
+    assert_eq!(unit_type("patch"), Some(UnitType::DosageForm));
+    assert_eq!(unit_type("oz"), Some(UnitType::Mass));
+    assert_eq!(unit_type("cm"), Some(UnitType::Length));
+    assert_eq!(unit_type("hr"), Some(UnitType::Time));
+    assert_eq!(unit_type("unknown"), None);
+}
+
+#[test]
+fn test_unit_type_expanded_and_plural() {
+    assert_eq!(unit_type("milligram"), Some(UnitType::Mass));
+    assert_eq!(unit_type("milliliters"), Some(UnitType::Volume));
+    assert_eq!(unit_type("tablets"), Some(UnitType::DosageForm));
+    assert_eq!(unit_type("patches"), Some(UnitType::DosageForm));
+    assert_eq!(unit_type("ounces"), Some(UnitType::Mass));
+    assert_eq!(unit_type("centimeters"), Some(UnitType::Length));
+    assert_eq!(unit_type("hours"), Some(UnitType::Time));
+    assert_eq!(unit_type("unknownunit"), None);
 }

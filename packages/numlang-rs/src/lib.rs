@@ -16,7 +16,7 @@ mod string;
 pub use string::from_string;
 
 pub mod unit;
-pub use unit::{abbreviate_unit, expand_unit};
+pub use unit::{abbreviate_unit, expand_unit, unit_type, UnitType};
 
 pub mod plural;
 pub use plural::{to_plural, to_singular};

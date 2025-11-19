@@ -63,6 +63,19 @@ opts.use_and = true;
 to_words(123, &opts); // "one hundred and twenty-three"
 ```
 
+## Unit Types
+
+Units are grouped by type (e.g., mass, volume, length, time, dosage form):
+
+```rust
+use numlang::{unit_type, UnitType};
+
+assert_eq!(unit_type("mg"), Some(UnitType::Mass));
+assert_eq!(unit_type("ml"), Some(UnitType::Volume));
+assert_eq!(unit_type("tablet"), Some(UnitType::DosageForm));
+assert_eq!(unit_type("unknown"), None);
+```
+
 ## API
 
 - `to_words(number, &Options)` — Converts a number (integer or float) to words.
