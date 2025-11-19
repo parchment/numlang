@@ -3,6 +3,7 @@ import { toOrdinal, toWordsOrdinal } from "./ordinal";
 import { fromWords } from "./parse";
 import { tokenise } from "./tokenise";
 import { expandUnit, abbreviateUnit } from "./unit";
+import { toPlural, toSingular } from "./plural";
 
 const numlang = {
   toWords,
@@ -12,6 +13,8 @@ const numlang = {
   tokenise,
   expandUnit,
   abbreviateUnit,
+  toPlural,
+  toSingular,
 };
 
 export {
@@ -22,5 +25,7 @@ export {
   tokenise,
   expandUnit,
   abbreviateUnit,
+  toPlural,
+  toSingular,
 };
 export default numlang;
