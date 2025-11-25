@@ -94,7 +94,6 @@ pub fn unit_map() -> HashMap<&'static str, (&'static str, UnitType)> {
     m.insert("yr", ("year", UnitType::Time));
 
     // Dosage forms
-    m.insert("tab", ("tablet", UnitType::DosageForm));
     m.insert("tablet", ("tablet", UnitType::DosageForm));
     m.insert("cap", ("capsule", UnitType::DosageForm));
     m.insert("capsule", ("capsule", UnitType::DosageForm));
