@@ -1,7 +1,8 @@
 dist
 node_modules
-**/target
+target
 .env
 .npmrc
 .DS_Store
 .cargo
+.idea

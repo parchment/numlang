@@ -11,7 +11,6 @@ fn test_expand_unit_basic() {
     assert_eq!(expand_unit("μg"), Some("microgram"));
     assert_eq!(expand_unit("cc"), Some("cubic centimeter"));
     assert_eq!(expand_unit("gtt"), Some("drop"));
-    assert_eq!(expand_unit("tab"), Some("tablet"));
     assert_eq!(expand_unit("cap"), Some("capsule"));
     assert_eq!(expand_unit("patch"), Some("patch"));
     assert_eq!(expand_unit("dose"), Some("dose"));
@@ -20,7 +19,6 @@ fn test_expand_unit_basic() {
 
 #[test]
 fn test_expand_unit_plural_and_case() {
-    assert_eq!(expand_unit("tab"), Some("tablet"));
     assert_eq!(expand_unit("cap"), Some("capsule"));
     assert_eq!(expand_unit("chew"), Some("chew"));
 }

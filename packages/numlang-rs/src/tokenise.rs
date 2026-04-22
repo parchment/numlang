@@ -60,10 +60,151 @@ fn split_punct_with_offsets(token: &str, token_start: usize) -> Vec<(String, usi
     tokens
 }
 
+/// Attempts to match a compound (multi-word) unit starting at the current token.
+///
+/// `raw_parts` is the result of `split_punct_with_offsets` on the current raw token.
+/// `end` is the byte index just past the current raw token (start of remaining input).
+/// Returns the tokens to emit and the new `idx` (past the last consumed word), or `None`.
+fn try_compound_unit(
+    input: &str,
+    input_bytes: &[u8],
+    len: usize,
+    end: usize,
+    raw_parts: &[(String, usize, usize)],
+    multi_word_units: &[Vec<String>],
+) -> Option<(Vec<TokenSpan>, usize)> {
+    // Find the non-punct core of the current token.
+    let (core_str, core_abs_start, _core_len) = raw_parts
+        .iter()
+        .find(|(s, _, _)| !s.chars().all(|c| c.is_ascii_punctuation()))?;
+
+    // Word1 must not have trailing punct — that punct would fall between the two unit words.
+    if raw_parts.len() > 1 && raw_parts.last().unwrap().0.chars().all(|c| c.is_ascii_punctuation()) {
+        return None;
+    }
+
+    let core_lc = core_str.to_lowercase();
+
+    for compound in multi_word_units {
+        if core_lc != compound[0] {
+            continue;
+        }
+
+        let mut scan_idx = end;
+        // (raw_str, raw_start, core_str, core_abs_start, core_abs_end)
+        let mut lookahead: Vec<(String, usize, String, usize, usize)> = Vec::new();
+        let mut matched = true;
+        let last_word_idx = compound.len() - 2; // index within compound[1..]
+
+        for (i, expected) in compound[1..].iter().enumerate() {
+            // Skip whitespace
+            while scan_idx < len && input_bytes[scan_idx].is_ascii_whitespace() {
+                scan_idx += 1;
+            }
+            if scan_idx >= len {
+                matched = false;
+                break;
+            }
+
+            let next_start = scan_idx;
+            let mut next_end = scan_idx;
+            while next_end < len && !input_bytes[next_end].is_ascii_whitespace() {
+                next_end += 1;
+            }
+
+            let next_raw = &input[next_start..next_end];
+            let next_parts = split_punct_with_offsets(next_raw, next_start);
+            let is_last = i == last_word_idx;
+
+            if let Some((nc_str, nc_abs_start, nc_len)) = next_parts
+                .iter()
+                .find(|(s, _, _)| !s.chars().all(|c| c.is_ascii_punctuation()))
+            {
+                if nc_str.to_lowercase() != *expected {
+                    matched = false;
+                    break;
+                }
+                // No leading punct allowed on any lookahead word.
+                if next_parts.first().unwrap().0.chars().all(|c| c.is_ascii_punctuation()) {
+                    matched = false;
+                    break;
+                }
+                // Trailing punct only allowed on the last word of the compound.
+                let has_trailing_punct = next_parts.len() > 1
+                    && next_parts.last().unwrap().0.chars().all(|c| c.is_ascii_punctuation());
+                if !is_last && has_trailing_punct {
+                    matched = false;
+                    break;
+                }
+                lookahead.push((
+                    next_raw.to_string(),
+                    next_start,
+                    nc_str.to_string(),
+                    *nc_abs_start,
+                    nc_abs_start + nc_len,
+                ));
+                scan_idx = next_end;
+            } else {
+                matched = false;
+                break;
+            }
+        }
+
+        if !matched {
+            continue;
+        }
+
+        let mut result: Vec<TokenSpan> = Vec::new();
+
+        // Leading punct of word1.
+        if raw_parts[0].0.chars().all(|c| c.is_ascii_punctuation()) {
+            result.push(TokenSpan {
+                token: Token::Unknown(raw_parts[0].0.clone()),
+                start: raw_parts[0].1,
+                end: raw_parts[0].1 + raw_parts[0].2,
+            });
+        }
+
+        // The compound unit span covers from core_abs_start to the last lookahead core's end.
+        let unit_start = *core_abs_start;
+        let unit_end = lookahead.last().unwrap().4;
+        let mut unit_str = core_str.to_string();
+        for la in &lookahead {
+            unit_str.push(' ');
+            unit_str.push_str(&la.2);
+        }
+        result.push(TokenSpan {
+            token: Token::Unit(unit_str),
+            start: unit_start,
+            end: unit_end,
+        });
+
+        // Trailing punct of last word.
+        let last_la = lookahead.last().unwrap();
+        let last_parts = split_punct_with_offsets(&last_la.0, last_la.1);
+        if last_parts.len() > 1 {
+            let trailing = last_parts.last().unwrap();
+            if trailing.0.chars().all(|c| c.is_ascii_punctuation()) {
+                result.push(TokenSpan {
+                    token: Token::Unknown(trailing.0.clone()),
+                    start: trailing.1,
+                    end: trailing.1 + trailing.2,
+                });
+            }
+        }
+
+        // scan_idx is the end of the last consumed raw token (past any trailing punct).
+        return Some((result, scan_idx));
+    }
+
+    None
+}
+
 /// Tokenises an input string into tokens with character positions.
 /// Preserves hyphenated number words as single tokens.
 /// Splits value+unit combos (e.g., "200g" -> ["200", "g"], "20mg/kg" -> ["20", "mg/kg"]).
 /// Separates leading/trailing punctuation as separate tokens.
+/// Recognises multi-word units (e.g., "kg dose", "fl oz") via a longest-match lookahead.
 pub fn tokenise(input: &str) -> Vec<TokenSpan> {
     let mut tokens = Vec::new();
 
@@ -85,12 +226,21 @@ pub fn tokenise(input: &str) -> Vec<TokenSpan> {
         unit_set.insert(abbr.to_lowercase());
     }
 
+    // Multi-word units sorted by descending word count (longest match first).
+    // Secondary sort is lexicographic for determinism.
+    let mut multi_word_units: Vec<Vec<String>> = unit_set
+        .iter()
+        .filter(|k| k.contains(' '))
+        .map(|k| k.split(' ').map(|w| w.to_string()).collect::<Vec<_>>())
+        .collect();
+    multi_word_units.sort_by(|a, b| b.len().cmp(&a.len()).then_with(|| a.cmp(b)));
+
     let input = input.trim();
     let mut idx = 0;
     let input_bytes = input.as_bytes();
     let len = input.len();
 
-    while idx < len {
+    'outer: while idx < len {
         // Skip whitespace
         while idx < len && input_bytes[idx].is_ascii_whitespace() {
             idx += 1;
@@ -106,7 +256,19 @@ pub fn tokenise(input: &str) -> Vec<TokenSpan> {
         }
         let raw = &input[start..end];
 
-        for (sub, sub_start_offset, sub_len) in split_punct_with_offsets(raw, start) {
+        // Compute punct-split parts once; reused for both compound check and fallthrough.
+        let raw_parts = split_punct_with_offsets(raw, start);
+
+        // Try compound unit match before single-token classification.
+        if let Some((compound_tokens, new_idx)) =
+            try_compound_unit(input, input_bytes, len, end, &raw_parts, &multi_word_units)
+        {
+            tokens.extend(compound_tokens);
+            idx = new_idx;
+            continue 'outer;
+        }
+
+        for (sub, sub_start_offset, sub_len) in raw_parts {
             let sub_start = sub_start_offset;
             let sub_end = sub_start + sub_len;
             if sub.is_empty() {

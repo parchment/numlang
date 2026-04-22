@@ -198,3 +198,97 @@ fn test_tokenise_unknown_attached() {
     assert_eq!(tokens.len(), 1);
     assert_eq!(tokens[0].token, Token::Unknown("20xyz".to_string()));
 }
+
+// --- Multi-word (compound) unit tests ---
+
+#[test]
+fn test_compound_unit_kg_dose() {
+    let tokens: Vec<_> = tokenise("5 kg dose")
+        .into_iter()
+        .map(|s| s.token)
+        .collect();
+    assert_eq!(
+        tokens,
+        vec![Token::NumberString("5".into()), Token::Unit("kg dose".into())]
+    );
+}
+
+#[test]
+fn test_compound_unit_fl_oz() {
+    let tokens: Vec<_> = tokenise("5 fl oz")
+        .into_iter()
+        .map(|s| s.token)
+        .collect();
+    assert_eq!(
+        tokens,
+        vec![Token::NumberString("5".into()), Token::Unit("fl oz".into())]
+    );
+}
+
+#[test]
+fn test_compound_unit_case_insensitive() {
+    let tokens: Vec<_> = tokenise("5 FL OZ")
+        .into_iter()
+        .map(|s| s.token)
+        .collect();
+    assert_eq!(
+        tokens,
+        vec![Token::NumberString("5".into()), Token::Unit("FL OZ".into())]
+    );
+}
+
+#[test]
+fn test_compound_unit_trailing_punct() {
+    // Trailing punct on the last word is stripped as Unknown
+    let tokens: Vec<_> = tokenise("5 fl oz.")
+        .into_iter()
+        .map(|s| s.token)
+        .collect();
+    assert_eq!(
+        tokens,
+        vec![
+            Token::NumberString("5".into()),
+            Token::Unit("fl oz".into()),
+            Token::Unknown(".".into()),
+        ]
+    );
+}
+
+#[test]
+fn test_compound_unit_leading_punct() {
+    // Leading punct on word1 is emitted as Unknown before the Unit
+    let tokens: Vec<_> = tokenise("(fl oz)")
+        .into_iter()
+        .map(|s| s.token)
+        .collect();
+    assert_eq!(
+        tokens,
+        vec![
+            Token::Unknown("(".into()),
+            Token::Unit("fl oz".into()),
+            Token::Unknown(")".into()),
+        ]
+    );
+}
+
+#[test]
+fn test_compound_unit_positions() {
+    // "give 1 fl oz daily" — verify start/end offsets of compound unit
+    let spans = tokenise("give 1 fl oz daily");
+    let unit = spans.iter().find(|s| matches!(&s.token, Token::Unit(_))).unwrap();
+    assert_eq!(unit.token, Token::Unit("fl oz".into()));
+    assert_eq!(unit.start, 7);
+    assert_eq!(unit.end, 12);
+}
+
+#[test]
+fn test_compound_unit_not_split_by_punct_between_words() {
+    // "fl, oz" — comma between the words prevents compound match
+    let tokens: Vec<_> = tokenise("fl, oz")
+        .into_iter()
+        .map(|s| s.token)
+        .collect();
+    // "fl," → fl (Unit) + , (Unknown); "oz" → Unit
+    assert!(tokens.contains(&Token::Unknown(",".into())));
+    assert!(!tokens.contains(&Token::Unit("fl oz".into())));
+}
