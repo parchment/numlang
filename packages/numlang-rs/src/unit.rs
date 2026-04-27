@@ -6,6 +6,7 @@ pub enum UnitType {
     Mass,
     Length,
     Time,
+    Area,
     DosageForm,
     Other,
 }
@@ -108,6 +109,60 @@ pub fn unit_map() -> HashMap<&'static str, (&'static str, UnitType)> {
     m.insert("pump", ("pump", UnitType::DosageForm));
     m.insert("app", ("application", UnitType::DosageForm));
     m.insert("pipette", ("pipette", UnitType::DosageForm));
+
+    // Volume aliases
+    m.insert("litre", ("litre", UnitType::Volume));
+
+    // Area
+    m.insert("sqcm", ("square centimeter", UnitType::Area));
+    m.insert("sqm", ("square meter", UnitType::Area));
+
+    // International/special units
+    m.insert("mu", ("million units", UnitType::Other));
+    m.insert("miu", ("mega international units", UnitType::Other));
+    m.insert("iu/kg", ("international units per kilogram", UnitType::Other));
+
+    // Compound rates
+    m.insert("drop/kg", ("drop per kilogram", UnitType::DosageForm));
+    m.insert("cm/sqcm", ("centimeter per square centimeter", UnitType::Area));
+    m.insert("mcg/sqcm", ("microgram per square centimeter", UnitType::Mass));
+    m.insert("mcg/sqm", ("microgram per square meter", UnitType::Mass));
+    m.insert("mg/sqm", ("milligram per square meter", UnitType::Mass));
+    m.insert("ml/sqcm", ("milliliter per square centimeter", UnitType::Volume));
+
+    // Dosage forms — general
+    m.insert("drop", ("drop", UnitType::DosageForm));
+    m.insert("syringe", ("syringe", UnitType::DosageForm));
+    m.insert("tube", ("tube", UnitType::DosageForm));
+    m.insert("actuation", ("actuation", UnitType::DosageForm));
+    m.insert("scoop", ("scoop", UnitType::DosageForm));
+    m.insert("inhaler", ("inhaler", UnitType::DosageForm));
+    m.insert("bottle", ("bottle", UnitType::DosageForm));
+    m.insert("strip", ("strip", UnitType::DosageForm));
+    m.insert("sponge", ("sponge", UnitType::DosageForm));
+    m.insert("container", ("container", UnitType::DosageForm));
+    m.insert("device", ("device", UnitType::DosageForm));
+    m.insert("cup", ("cup", UnitType::DosageForm));
+    m.insert("collar", ("collar", UnitType::DosageForm));
+    m.insert("bullet", ("bullet", UnitType::DosageForm));
+    m.insert("bolus", ("bolus", UnitType::DosageForm));
+    m.insert("ampoule", ("ampoule", UnitType::DosageForm));
+    m.insert("applicator", ("applicator", UnitType::DosageForm));
+    m.insert("course", ("course", UnitType::DosageForm));
+    m.insert("dots", ("dots", UnitType::DosageForm));
+    m.insert("measure", ("measure", UnitType::DosageForm));
+    m.insert("ear", ("ear", UnitType::DosageForm));
+    m.insert("eye", ("eye", UnitType::DosageForm));
+    m.insert("teat", ("teat", UnitType::DosageForm));
+
+    // Multi-word dosage forms (tokeniser handles these via try_compound_unit)
+    m.insert("blue scoop", ("blue scoop", UnitType::DosageForm));
+    m.insert("white scoop", ("white scoop", UnitType::DosageForm));
+    m.insert("ear tag", ("ear tag", UnitType::DosageForm));
+    m.insert("affected area", ("affected area", UnitType::DosageForm));
+    m.insert("bait unit", ("bait unit", UnitType::DosageForm));
+    m.insert("wafer strip", ("wafer strip", UnitType::DosageForm));
+    m.insert("ml/sqcm tumour", ("milliliter per square centimeter tumour", UnitType::Volume));
 
     m
 }

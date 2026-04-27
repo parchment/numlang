@@ -103,7 +103,23 @@ fn irregular_plurals() -> HashMap<&'static str, &'static str> {
     m.insert("drop", "drops");
     m.insert("spray", "sprays");
     m.insert("puff", "puffs");
-    // Add more as needed
+    m.insert("bolus", "boluses");
+    m.insert("ampoule", "ampoules");
+    m.insert("syringe", "syringes");
+    m.insert("actuation", "actuations");
+    m.insert("scoop", "scoops");
+    m.insert("teat", "teats");
+    m.insert("collar", "collars");
+    m.insert("measure", "measures");
+    m.insert("course", "courses");
+    m.insert("device", "devices");
+    m.insert("strip", "strips");
+    m.insert("bottle", "bottles");
+    m.insert("inhaler", "inhalers");
+    m.insert("tube", "tubes");
+    m.insert("ear", "ears");
+    m.insert("eye", "eyes");
+    m.insert("cup", "cups");
     m
 }
 
