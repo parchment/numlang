@@ -268,7 +268,8 @@ pub fn tokenise(input: &str) -> Vec<TokenSpan> {
             continue 'outer;
         }
 
-        for (sub, sub_start_offset, sub_len) in raw_parts {
+        let mut advance_to: Option<(Vec<TokenSpan>, usize)> = None;
+        'parts: for (sub, sub_start_offset, sub_len) in raw_parts {
             let sub_start = sub_start_offset;
             let sub_end = sub_start + sub_len;
             if sub.is_empty() {
@@ -291,6 +292,31 @@ pub fn tokenise(input: &str) -> Vec<TokenSpan> {
                 let unit_candidate = &sub[i..];
                 let unit_candidate_lc = unit_candidate.to_lowercase();
                 if unit_set.contains(unit_candidate_lc.as_str()) {
+                    // Check whether unit_candidate is the first word of a multi-word unit.
+                    // e.g. "12kg" split → num="12", unit="kg"; if "kg dose" exists, consume "dose" too.
+                    let unit_abs_start = sub_start + num.len();
+                    let unit_fake_parts = vec![(
+                        unit_candidate.to_string(),
+                        unit_abs_start,
+                        unit_candidate.len(),
+                    )];
+                    if let Some((compound_tokens, new_idx)) = try_compound_unit(
+                        input,
+                        input_bytes,
+                        len,
+                        end,
+                        &unit_fake_parts,
+                        &multi_word_units,
+                    ) {
+                        let mut result: Vec<TokenSpan> = vec![TokenSpan {
+                            token: Token::NumberString(num.to_string()),
+                            start: sub_start,
+                            end: unit_abs_start,
+                        }];
+                        result.extend(compound_tokens);
+                        advance_to = Some((result, new_idx));
+                        break 'parts;
+                    }
                     tokens.push(TokenSpan {
                         token: Token::NumberString(num.to_string()),
                         start: sub_start,
@@ -357,6 +383,11 @@ pub fn tokenise(input: &str) -> Vec<TokenSpan> {
                 start: sub_start,
                 end: sub_end,
             });
+        }
+        if let Some((extra_tokens, new_idx)) = advance_to {
+            tokens.extend(extra_tokens);
+            idx = new_idx;
+            continue 'outer;
         }
         idx = end;
     }

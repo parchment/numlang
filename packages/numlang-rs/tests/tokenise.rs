@@ -292,3 +292,62 @@ fn test_compound_unit_not_split_by_punct_between_words() {
     assert!(tokens.contains(&Token::Unknown(",".into())));
     assert!(!tokens.contains(&Token::Unit("fl oz".into())));
 }
+
+// --- Attached number + multi-word unit ---
+
+#[test]
+fn test_attached_number_compound_unit_kg_dose() {
+    // "12kg dose" — number attached to first word of compound unit
+    let tokens: Vec<_> = tokenise("12kg dose")
+        .into_iter()
+        .map(|s| s.token)
+        .collect();
+    assert_eq!(
+        tokens,
+        vec![Token::NumberString("12".into()), Token::Unit("kg dose".into())]
+    );
+}
+
+#[test]
+fn test_attached_number_compound_unit_decimal() {
+    // "3.5kg dose" — decimal number attached to first word
+    let tokens: Vec<_> = tokenise("3.5kg dose")
+        .into_iter()
+        .map(|s| s.token)
+        .collect();
+    assert_eq!(
+        tokens,
+        vec![Token::NumberString("3.5".into()), Token::Unit("kg dose".into())]
+    );
+}
+
+#[test]
+fn test_attached_number_compound_unit_trailing_punct() {
+    // "12kg dose." — trailing punct on the last compound word is stripped as Unknown
+    let tokens: Vec<_> = tokenise("12kg dose.")
+        .into_iter()
+        .map(|s| s.token)
+        .collect();
+    assert_eq!(
+        tokens,
+        vec![
+            Token::NumberString("12".into()),
+            Token::Unit("kg dose".into()),
+            Token::Unknown(".".into()),
+        ]
+    );
+}
+
+#[test]
+fn test_attached_number_compound_unit_in_sentence() {
+    // The originally-failing full sentence
+    let tokens: Vec<_> = tokenise("Give 12kg dose once daily for 7 days.")
+        .into_iter()
+        .map(|s| s.token)
+        .collect();
+    let num_idx = tokens
+        .iter()
+        .position(|t| *t == Token::NumberString("12".into()))
+        .expect("NumberString(12) not found");
+    assert_eq!(tokens[num_idx + 1], Token::Unit("kg dose".into()));
+}
